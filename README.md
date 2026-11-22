@@ -10,26 +10,13 @@ Built for the [make.fun](https://make.fun) `gta6-01` open-world crime game compe
 
 ## Architecture (`game/src/`)
 
-- `core/config.js` — World constants, four district layouts, six vehicle specs, four weapons, three crew abilities, and ten campaign missions.
-- `core/random.js` — Deterministic Mulberry32 PRNG for procedural city blocks, traffic lanes, and reproducible screenshot staging.
-- `core/input.js` — Keyboard and mouse-look controls for driving, drift handbrake, nitrous, aiming, weapon switching, and crew abilities.
-- `core/storage.js` — Three-slot `localStorage` save and load manager tracking cash, mission ratings, vehicle upgrades, and career statistics.
-- `world/textures.js` — High-contrast procedural `THREE.CanvasTexture` generators for four-lane grained asphalt, crosswalks, lit Art-Deco and glass facades, neon billboards, ocean waves, alloy rims, and tire treads.
-- `world/city3d.js` — Four-district 3D coastal map (Palm Boulevard, Downtown Neon, Harbor Docks, Industrial Yard) with palms, boardwalks, night market stalls, gantry cranes, and container piers.
-- `world/lighting.js` — Three-layer golden-hour sunset dome, directional sun shadows, volumetric helicopter spotlight cones, police strobe lights, and exponential horizon fog.
-- `entities/vehicles3d.js` — Multi-part 3D vehicles with wedge chassis, reflective cabins, spoilers, grounded alloy wheels with contact shadows, drift physics, and `[E]` carjacking.
-- `entities/characters3d.js` — Articulated 3D player, pedestrian, syndicate, and police officer rigs with weapon attachments and walk cycles.
-- `entities/helicopter3d.js` — SBPD Falcon-1 pursuit helicopter with spinning rotors, navigation strobes, and target-tracking spotlight cone.
-- `systems/traffic.js` — Multi-lane autonomous traffic and pedestrian simulation.
-- `systems/police.js` — Five-star wanted escalation and Tactical Police Dispatch tracking unit callsigns, distances, and active tactics (`RAMMING`, `FLANKING`, `SPOTLIGHT`, `ROADBLOCK`).
-- `systems/crew.js` — Three active crew specialists with cooldown abilities (`EMP Jammer`, `Nitro Getaway`, `Smoke Screen`).
-- `systems/combat.js` — Four-slot weapon hotbar, ballistic tracers, muzzle flashes, vehicle explosions, and on-foot or drive-by fire.
-- `systems/missions.js` — Ten multi-stage story missions from *Dockside Ignition* to *Pier Endgame* with character portrait dialogue.
-- `systems/economy.js` — Costa Customs 3D turntable garage upgrade shop (paint, engine, handling, armor, nitro), armory restock, and safehouse management.
-- `ui/hud.js` — High-contrast corner HUD and rotating coastal minimap keeping over 70% of the 3D viewport unobstructed.
-- `ui/menus.js` — Interactive Costa Customs 3D workshop UI and full-city map / career / 3-slot save hub.
-- `ui/shots.js` — Deterministic `?shot=` staging for real headless WebGL verification captures.
-- `audio/synth.js` — Procedural Web Audio engine sound, police sirens, helicopter rotor thrum, gunfire, and three coastal radio stations.
+- `core/` (`config.js`, `random.js`, `math.js`, `clock.js`, `input.js`, `storage.js`, `simEngine.js`) — World constants, Mulberry32 PRNG, vector/angle bounds utilities, fixed-timestep simulation clock with `visibilitychange`/`blur` pause, keyboard/mouse controls, three-slot `localStorage` career persistence, and headless simulation engine verified via `node:test`.
+- `world/` (`textures.js`, `sky.js`, `lighting.js`, `ocean.js`, `foliage.js`, `roads.js`, `buildings.js`, `props.js`, `garage3d.js`, `city3d.js`) — Procedural `THREE.CanvasTexture` generators, golden-hour sunset dome and tuned horizon fog, three-layer lighting, turquoise ocean with surf foam breakers and moored yachts, `THREE.InstancedMesh` curved coconut palms with slanted road shadows, four-lane grained asphalt avenues, Art-Deco and neon glass towers, instanced streetlamps and beach bollards, Pacifica Pier Ferris wheel and Harbor Night Market landmarks, and the Costa Customs 3D turntable bay.
+- `effects/` (`particles.js`, `reflections.js`, `trails.js`) — Multi-layered high-contrast fiery explosions with ember sparks and smoke plumes, dusk wet-asphalt siren and brake light specular reflection pools, crimson LED taillight trails, and three-stage nitrous afterburner plumes.
+- `entities/` (`carChassis.js`, `vehicles3d.js`, `helicopter3d.js`, `characters3d.js`) — Sculpted aerodynamic sports coupes and police interceptors with fastback glass, flared fenders, rear diffusers, and grounded alloy wheels (`y = 0.00`), SBPD Falcon-1 helicopter with dual-layer volumetric spotlight cone, and articulated 3D character rigs with handheld firearms.
+- `systems/` (`traffic.js`, `police.js`, `crew.js`, `combat.js`, `missions.js`, `economy.js`) — Autonomous multi-lane traffic and pedestrian simulation, five-star tactical police dispatch, three crew specialist abilities, four-slot ballistic combat, ten multi-stage story missions, and Costa Customs workshop upgrades.
+- `ui/` (`minimap.js`, `dispatchPanel.js`, `weaponWheel.js`, `hud.js`, `menus.js`, `shots.js`) — Sleek translucent corner HUD keeping over 77% of the 3D viewport open, rotating coastal radar, synchronized 4-star dispatch panel, weapon and crew hotbars, portrait comms card, interactive four-district GPS map, and deterministic `?shot=` capture staging.
+- `audio/` (`synth.js`, `radio.js`) — Procedural Web Audio synthesizer and three coastal FM radio stations.
 
 ## Running Locally
 

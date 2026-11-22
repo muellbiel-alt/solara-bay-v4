@@ -1,10 +1,10 @@
-// Solara Bay: Neon Dynasty (V4) — Procedural Web Audio Engine, Police Sirens, Gunfire & 3 Radio Stations
+// Solara Bay: Neon Dynasty (V5) — Procedural Web Audio Engine, Police Sirens, Gunfire & Radio Synth
 
 export function createAudioSynth() {
   let ctx = null;
 
   function ensureContext() {
-    if (!ctx) {
+    if (!ctx && typeof window !== 'undefined') {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
         try {
@@ -44,7 +44,7 @@ export function createAudioSynth() {
       playTone(145, 0.09, 'sawtooth', 0.12);
     },
     playExplosion() {
-      playTone(58, 0.38, 'triangle', 0.18);
+      playTone(54, 0.42, 'triangle', 0.18);
     },
     playUpgradeInstall() {
       playTone(520, 0.14, 'sine', 0.1);
@@ -52,6 +52,10 @@ export function createAudioSynth() {
     },
     playCrewTrigger() {
       playTone(440, 0.16, 'triangle', 0.11);
+    },
+    playRadioJingle(rootHz = 110) {
+      playTone(rootHz * 2, 0.1, 'sine', 0.06);
+      setTimeout(() => playTone(rootHz * 3, 0.14, 'sine', 0.06), 75);
     },
   };
 }

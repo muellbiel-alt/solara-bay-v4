@@ -1,18 +1,17 @@
-/* Solara Bay: Neon Dynasty (V4) — High-Contrast Tactical HUD & Studio UI */
-/* Designed for razor-sharp legibility at both 1280x720 and 768x480 contact sheet scale,
-   while keeping >= 72% of the 3D WebGL viewport completely unobstructed. */
+/* Solara Bay: Neon Dynasty (V5) — Sleek Translucent Tactical HUD & Studio UI */
+/* Engineered for 768x480 contact-sheet legibility while keeping >= 77% of the 3D viewport open. */
 
 :root {
-  --bg-panel: rgba(10, 15, 26, 0.88);
-  --bg-panel-heavy: rgba(9, 13, 23, 0.94);
-  --border-subtle: rgba(255, 255, 255, 0.16);
+  --bg-panel: rgba(9, 14, 26, 0.72);
+  --bg-panel-heavy: rgba(8, 13, 24, 0.84);
+  --border-subtle: rgba(255, 255, 255, 0.22);
   --accent-gold: #ffb830;
   --accent-amber: #ff942e;
   --accent-coral: #ff4d5e;
   --accent-cyan: #24e5ff;
   --accent-emerald: #2ee889;
   --text-main: #f8fafd;
-  --text-muted: #a6b4ca;
+  --text-muted: #b0bfd6;
   --font-display: 'Impact', 'Arial Black', 'Segoe UI', system-ui, sans-serif;
   --font-sans: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
@@ -67,23 +66,23 @@ html, body {
 /* Top-Center Action-First Sky Brand Badge */
 .sky-brand {
   position: absolute;
-  top: 10px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 15;
   text-align: center;
   pointer-events: none;
-  padding: 4px 16px 5px;
-  background: linear-gradient(180deg, rgba(10, 15, 28, 0.78) 0%, rgba(10, 15, 28, 0.52) 100%);
-  border: 1px solid rgba(255, 184, 48, 0.45);
+  padding: 3px 15px 4px;
+  background: linear-gradient(180deg, rgba(9, 14, 26, 0.68) 0%, rgba(9, 14, 26, 0.44) 100%);
+  border: 1px solid rgba(255, 184, 48, 0.48);
   border-top: 2px solid var(--accent-gold);
-  border-radius: 7px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  border-radius: 6px;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.42);
 }
 
 .sky-brand-main {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 900;
   letter-spacing: 1.5px;
   line-height: 1.05;
@@ -97,14 +96,14 @@ html, body {
 }
 
 .sky-brand-meta {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 1.2px;
   color: var(--accent-cyan);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
-/* HUD 4-Corner Layout */
+/* HUD 4-Corner Sleek Translucent Layout (>= 77% viewport open) */
 .hud-layer {
   position: absolute;
   inset: 0;
@@ -116,47 +115,47 @@ html, body {
   position: absolute;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 5px;
 }
 
 .hud-top-left {
-  top: 10px;
-  left: 12px;
-  width: 274px;
+  top: 9px;
+  left: 10px;
+  width: 286px;
 }
 
 .hud-top-right {
-  top: 10px;
-  right: 12px;
-  width: 282px;
+  top: 9px;
+  right: 10px;
+  width: 272px;
   align-items: flex-end;
 }
 
 .hud-bottom-left {
-  bottom: 10px;
-  left: 12px;
-  width: 184px;
+  bottom: 9px;
+  left: 10px;
+  width: 166px;
 }
 
 .hud-bottom-right {
-  bottom: 10px;
-  right: 12px;
-  width: 222px;
+  bottom: 9px;
+  right: 10px;
+  width: 226px;
   align-items: flex-end;
 }
 
 .hud-panel {
   background: var(--bg-panel);
   border: 1px solid var(--border-subtle);
-  border-radius: 7px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(3px);
 }
 
 /* Top-Left: Mission Stage Card */
 .mission-card {
-  padding: 8px 10px;
-  border-left: 3.5px solid var(--accent-gold);
+  padding: 6px 9px;
+  border-left: 2.5px solid var(--accent-gold);
 }
 
 .mission-header {
@@ -177,14 +176,12 @@ html, body {
 }
 
 .mission-name {
-  font-size: 12px;
+  font-size: 10.5px;
   font-weight: 900;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.2px;
   color: #ffffff;
   flex: 1;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .mission-clock {
@@ -260,8 +257,8 @@ html, body {
 
 /* Top-Left: Tactical Police Dispatch */
 .dispatch-card {
-  padding: 7px 10px;
-  border-left: 3.5px solid var(--accent-coral);
+  padding: 6px 9px;
+  border-left: 2.5px solid var(--accent-coral);
 }
 
 .dispatch-header {
@@ -371,8 +368,8 @@ html, body {
 /* Top-Right: Cash, Wanted Stars, Rank, Weapons, Crew */
 .status-top-card {
   width: 100%;
-  padding: 8px 11px;
-  border-right: 3.5px solid var(--accent-emerald);
+  padding: 6px 10px;
+  border-right: 2.5px solid var(--accent-emerald);
 }
 
 .cash-clock-row {
@@ -640,13 +637,13 @@ html, body {
 
 .minimap-frame {
   position: relative;
-  width: 174px;
-  height: 174px;
+  width: 162px;
+  height: 162px;
   background: #0b1424;
-  border: 2.5px solid var(--accent-gold);
-  border-radius: 12px;
+  border: 2px solid var(--accent-gold);
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
 }
 
 #minimap-canvas {
@@ -660,9 +657,9 @@ html, body {
   top: 4px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(9, 13, 23, 0.88);
+  background: rgba(9, 13, 23, 0.85);
   color: var(--accent-gold);
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 900;
   padding: 1px 5px;
   border-radius: 3px;
@@ -670,11 +667,11 @@ html, body {
 }
 
 .vitals-card {
-  width: 174px;
-  padding: 6px 8px;
+  width: 162px;
+  padding: 5px 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3.5px;
 }
 
 .vital-row {
@@ -718,15 +715,15 @@ html, body {
 /* Bottom-Center: Compact Portrait Dialogue Card (low height so hero car sits 100% clear above it) */
 .dialogue-card {
   position: absolute;
-  bottom: 10px;
+  bottom: 9px;
   left: 50%;
   transform: translateX(-50%);
-  width: 430px;
-  padding: 6px 10px;
+  width: 408px;
+  padding: 5px 9px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  border-bottom: 2.5px solid var(--accent-gold);
+  gap: 9px;
+  border-bottom: 2px solid var(--accent-gold);
 }
 
 .dialogue-avatar {
@@ -789,18 +786,16 @@ html, body {
 }
 
 .radio-text {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 800;
   color: #f3f7ff;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .speedo-card {
   width: 100%;
-  padding: 8px 11px;
-  border-right: 3.5px solid var(--accent-gold);
+  padding: 6px 10px;
+  border-right: 2.5px solid var(--accent-gold);
 }
 
 .veh-top-row {

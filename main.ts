@@ -1,11 +1,17 @@
-// Solara Bay: Neon Dynasty (V4) — Deterministic Dossier & Output Bundler (Node 22, stdlib only)
-// Copies static offline WebGL 3D game files (game/) and verified real browser captures (screenshots/)
-// into /output (or MAKEFUN_OUTPUT_DIR) and generates /output/dossier.json via vendor/makefun-game.ts.
+// Solara Bay: Neon Dynasty (V5) — Deterministic Dossier & Output Bundler (Node 22, stdlib only)
+// Bundles static offline WebGL 3D game files (game/) and verified real browser captures (screenshots/)
+// into /output (or MAKEFUN_OUTPUT_DIR), excluding tests/ and dev-only files, and generates dossier.json.
 
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
+
+export const BUNDLE_METADATA = {
+  title: 'Solara Bay: Neon Dynasty',
+  version: '5.0.0',
+  competition: 'gta6-01',
+};
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
 const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
@@ -18,6 +24,14 @@ const DOSSIER_LIMITS = {
   game_path_max_bytes: 1000,
 };
 
+function hasValidImageHeader(filePath: string): boolean {
+  const buf = readFileSync(filePath);
+  if (buf.length < 16) return false;
+  const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+  const isJpeg = buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+  return isPng || isJpeg;
+}
+
 function verifyScreenshotsCompliance(shotsDir: string): string[] {
   if (!existsSync(shotsDir)) {
     throw new Error(`Missing screenshots directory at ${shotsDir}`);
@@ -29,9 +43,13 @@ function verifyScreenshotsCompliance(shotsDir: string): string[] {
     throw new Error(`Invalid screenshot count (${validFiles.length}); expected 3..4 files.`);
   }
   for (const file of validFiles) {
-    const info = statSync(join(shotsDir, file));
+    const fullPath = join(shotsDir, file);
+    const info = statSync(fullPath);
     if (!info.isFile() || info.size <= 0 || info.size > DOSSIER_LIMITS.screenshots.max_bytes) {
       throw new Error(`Screenshot ${file} invalid size (${info.size} bytes; max 262144).`);
+    }
+    if (!hasValidImageHeader(fullPath)) {
+      throw new Error(`Screenshot ${file} is not a valid PNG or JPEG binary.`);
     }
   }
   return validFiles;
@@ -41,8 +59,10 @@ function prepareOutputDirectory(targetDir: string): void {
   mkdirSync(targetDir, { recursive: true });
   const gameTarget = join(targetDir, 'game');
   const shotsTarget = join(targetDir, 'screenshots');
+  const testsTarget = join(targetDir, 'tests');
   if (existsSync(gameTarget)) rmSync(gameTarget, { recursive: true, force: true });
   if (existsSync(shotsTarget)) rmSync(shotsTarget, { recursive: true, force: true });
+  if (existsSync(testsTarget)) rmSync(testsTarget, { recursive: true, force: true });
   mkdirSync(gameTarget, { recursive: true });
   mkdirSync(shotsTarget, { recursive: true });
 }
@@ -50,7 +70,10 @@ function prepareOutputDirectory(targetDir: string): void {
 function bundleEntryAssets(sourceRoot: string, targetDir: string): void {
   const gameSource = join(sourceRoot, 'game');
   const shotsSource = join(sourceRoot, 'screenshots');
-  cpSync(gameSource, join(targetDir, 'game'), { recursive: true });
+  cpSync(gameSource, join(targetDir, 'game'), {
+    recursive: true,
+    filter: (src) => !src.includes('/tests') && !src.endsWith('.test.mjs'),
+  });
   const shotFiles = verifyScreenshotsCompliance(shotsSource);
   for (const file of shotFiles) {
     cpSync(join(shotsSource, file), join(targetDir, 'screenshots', file));

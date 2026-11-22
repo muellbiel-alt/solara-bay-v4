@@ -1,6 +1,6 @@
-// Solara Bay: Neon Dynasty (V4) — Articulated 3D Player, Crew, Police Officer, Syndicate & Pedestrian Rigs
+// Solara Bay: Neon Dynasty (V5) — Articulated 3D Player, Crew, Police Officer, Syndicate & Pedestrian Rigs
 // Each character has articulated legs, boots touching y = 0.00, contact shadow disc, torso with jacket/vest,
-// head with hair/cap, articulated arms, and weapon attachment with dynamic muzzle flash.
+// head with hair/cap, articulated arms, and 3D firearm attachment with dual-layer muzzle flash.
 
 const THREE = window.THREE;
 
@@ -86,7 +86,7 @@ export function createCharacterRig(role = 'player', customPalette = null) {
   rSleeve.position.y = -0.24;
   rightArm.add(rSleeve);
 
-  // 3D Weapon Mesh (Kobra SMG / Tactical Carbine)
+  // 3D Weapon Mesh (Kobra SMG / Tactical Carbine) & Dual-Layer Muzzle Flash
   const gunMat = new THREE.MeshLambertMaterial({ color: 0x161b24 });
   const gun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.16, 0.58), gunMat);
   gun.position.set(0, -0.46, 0.28);
@@ -94,7 +94,7 @@ export function createCharacterRig(role = 'player', customPalette = null) {
 
   const muzzleFlash = new THREE.Mesh(
     new THREE.SphereGeometry(0.24, 8, 8),
-    new THREE.MeshBasicMaterial({ color: 0xffd15c })
+    new THREE.MeshBasicMaterial({ color: 0xffe46b, fog: false })
   );
   muzzleFlash.position.set(0, -0.46, 0.65);
   muzzleFlash.visible = false;

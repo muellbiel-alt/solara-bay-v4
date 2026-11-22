@@ -1,74 +1,12 @@
-// Solara Bay: Neon Dynasty (V4) — 4-Slot Weapon Hotbar, Ballistic Tracers, Muzzle Flashes & Explosions
+// Solara Bay: Neon Dynasty (V5) — 4-Slot Weapon Inventory, Ballistic Combat & Explosion Orchestrator
+// Uses effects/particles.js for high-contrast fiery explosions and glowing ballistic tracers.
 
 const THREE = window.THREE;
 import { WEAPON_SLOTS } from '../core/config.js';
 import { createCharacterRig } from '../entities/characters3d.js';
+import { createBulletTracer, createExplosionEffect } from '../effects/particles.js';
 
-export function createExplosionEffect(scene, x, y, z, scale = 1.0) {
-  const group = new THREE.Group();
-  group.position.set(x, y, z);
-
-  // Core white-gold fireball
-  const core = new THREE.Mesh(
-    new THREE.SphereGeometry(1.7 * scale, 14, 14),
-    new THREE.MeshBasicMaterial({ color: 0xfff3a8 })
-  );
-  core.position.y = 1.2 * scale;
-  group.add(core);
-
-  // Mid orange-coral blast spheres
-  const blastOffsets = [
-    { x: -1.1, y: 1.5, z: 0.4, r: 1.55, c: 0xff7b24 },
-    { x: 1.2, y: 1.4, z: -0.4, r: 1.45, c: 0xff4d2e },
-    { x: 0.2, y: 2.4, z: 0.2, r: 1.65, c: 0xff942e },
-    { x: -0.6, y: 2.9, z: -0.3, r: 1.35, c: 0x38323c },
-    { x: 0.8, y: 3.4, z: 0.3, r: 1.5, c: 0x28242c },
-  ];
-  for (const b of blastOffsets) {
-    const m = new THREE.Mesh(
-      new THREE.SphereGeometry(b.r * scale, 12, 12),
-      new THREE.MeshBasicMaterial({
-        color: b.c,
-        transparent: true,
-        opacity: b.y > 2.6 ? 0.78 : 0.92,
-      })
-    );
-    m.position.set(b.x * scale, b.y * scale, b.z * scale);
-    group.add(m);
-  }
-
-  // Ground scorch & shockwave ring
-  const ring = new THREE.Mesh(
-    new THREE.RingGeometry(1.8 * scale, 3.3 * scale, 24),
-    new THREE.MeshBasicMaterial({
-      color: 0xffae38,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.75,
-    })
-  );
-  ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.05;
-  group.add(ring);
-
-  scene.add(group);
-  return group;
-}
-
-export function createBulletTracer(scene, startVec, endVec, colorHex = 0xffe066) {
-  const dir = new THREE.Vector3().subVectors(endVec, startVec);
-  const len = dir.length();
-  const mid = new THREE.Vector3().addVectors(startVec, endVec).multiplyScalar(0.5);
-
-  const geo = new THREE.CylinderGeometry(0.055, 0.055, len, 6);
-  geo.rotateX(Math.PI / 2);
-  const mat = new THREE.MeshBasicMaterial({ color: colorHex });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.copy(mid);
-  mesh.lookAt(endVec);
-  scene.add(mesh);
-  return mesh;
-}
+export { createBulletTracer, createExplosionEffect };
 
 export function createCombatSystem(scene, audioSynth) {
   const weapons = structuredClone(WEAPON_SLOTS);
@@ -79,11 +17,11 @@ export function createCombatSystem(scene, audioSynth) {
   const explosions = [];
   const combatNPCs = [];
 
-  // Spawn Harbor Docks / Night Market firefight combatants & roadblock explosion
-  const chaseRoadblockExplosion = createExplosionEffect(scene, -4.6, 0, -29.5, 1.05);
+  // Spawn Palm Boulevard roadblock explosion & Harbor Night Market blockade blast
+  const chaseRoadblockExplosion = createExplosionEffect(scene, -4.6, 0, -29.5, 1.08);
   explosions.push(chaseRoadblockExplosion);
 
-  const harborBlast = createExplosionEffect(scene, -76.2, 0, 96.5, 1.25);
+  const harborBlast = createExplosionEffect(scene, -76.2, 0, 96.5, 1.28);
   explosions.push(harborBlast);
 
   // Spawn articulated enemies & police officers in Harbor Docks Night Market (for Shot 2 & live play)
@@ -135,7 +73,7 @@ export function createCombatSystem(scene, audioSynth) {
     return weapons.find((w) => w.slot === activeSlot) || weapons[2];
   }
 
-  function fireWeapon(originPos, forwardDir) {
+  function fireWeapon() {
     if (fireCooldown > 0) return false;
     const wpn = getActiveWeapon();
     fireCooldown = wpn.fireRate;
@@ -153,9 +91,10 @@ export function createCombatSystem(scene, audioSynth) {
 
   function update(dt, time) {
     if (fireCooldown > 0) fireCooldown = Math.max(0, fireCooldown - dt);
-    const scalePulse = 1 + Math.sin(time * 12) * 0.05;
     for (const ex of explosions) {
-      ex.scale.setScalar(scalePulse);
+      if (ex.userData && ex.userData.update) {
+        ex.userData.update(time);
+      }
     }
   }
 

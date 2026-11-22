@@ -266,18 +266,18 @@ export function createNeonSignTexture(title, subtitle, bgHex = '#0c1324', border
 export function createOceanTexture() {
   const { canvas, ctx } = makeCanvas(512, 512);
   const grad = ctx.createLinearGradient(0, 0, 512, 512);
-  grad.addColorStop(0, '#095f7a');
-  grad.addColorStop(0.5, '#0c7c96');
-  grad.addColorStop(1, '#084e69');
+  grad.addColorStop(0, '#0496b8');
+  grad.addColorStop(0.5, '#00c6e0');
+  grad.addColorStop(1, '#067da0');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 512, 512);
 
-  // Sun-glint ripples & turquoise wave crests
-  for (let y = 0; y < 512; y += 16) {
-    ctx.fillStyle = y % 32 === 0 ? 'rgba(130, 245, 255, 0.28)' : 'rgba(255, 210, 140, 0.22)';
-    for (let x = 0; x < 512; x += 64) {
-      const offset = (y * 1.3) % 48;
-      ctx.fillRect((x + offset) % 512, y, 36, 4);
+  // Sparkling sunset glints & turquoise wave foam crests
+  for (let y = 0; y < 512; y += 14) {
+    ctx.fillStyle = y % 28 === 0 ? 'rgba(185, 253, 255, 0.48)' : 'rgba(255, 224, 132, 0.36)';
+    for (let x = 0; x < 512; x += 56) {
+      const offset = (y * 1.4) % 44;
+      ctx.fillRect((x + offset) % 512, y, 38, 4);
     }
   }
 
