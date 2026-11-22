@@ -1,9 +1,13 @@
-// Solara Bay: Neon Dynasty (V5) — Headless Open-World Simulation & Determinism Verification Suite
+// Solara Bay: Neon Dynasty (V6) — Headless Open-World Simulation, Asset & Determinism Verification Suite
 // Runs 600+ fixed-timestep frames via node:test to verify zero NaNs, world bounds enforcement,
-// wanted pursuit & mission progression, visibility pause, and full deterministic state reset.
+// wanted pursuit & mission progression, visibility pause, full deterministic state reset,
+// offline compliance across game/src/, and V6 VFX/world module integrity.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   advanceMissionStageSim,
   createSimState,
@@ -13,6 +17,8 @@ import {
 import { createSimulationClock } from '../game/src/core/clock.js';
 import { createPRNG } from '../game/src/core/random.js';
 
+const ROOT_DIR = fileURLToPath(new URL('..', import.meta.url));
+
 function assertFiniteEntity(obj, label) {
   for (const [k, v] of Object.entries(obj)) {
     if (typeof v === 'number') {
@@ -21,11 +27,33 @@ function assertFiniteEntity(obj, label) {
   }
 }
 
-test('Mulberry32 PRNG produces identical sequences for identical seeds', () => {
+function collectFilesRecursive(dir) {
+  const out = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === 'vendor') continue;
+      out.push(...collectFilesRecursive(full));
+    } else if (entry.isFile()) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+test('Mulberry32 PRNG produces identical sequences for identical seeds and stays in [0, 1)', () => {
   const rngA = createPRNG(42);
   const rngB = createPRNG(42);
   for (let i = 0; i < 200; i++) {
-    assert.equal(rngA.next(), rngB.next());
+    const a = rngA.next();
+    const b = rngB.next();
+    assert.equal(a, b);
+    assert.ok(a >= 0 && a < 1, `PRNG sample out of bounds: ${a}`);
+  }
+  const rngSkyA = createPRNG(602);
+  const rngSkyB = createPRNG(602);
+  for (let i = 0; i < 64; i++) {
+    assert.equal(rngSkyA.range(10, 120), rngSkyB.range(10, 120));
   }
 });
 
@@ -100,4 +128,34 @@ test('SimulationClock clamps frame spikes and pauses cleanly on blur', () => {
     steps++;
   });
   assert.equal(pausedSteps, 0, 'Zero simulation steps execute while paused');
+});
+
+test('V6 game assets stay 100% offline and include additive VFX, rooftop details, catenary lanterns, and 3D garage textures', () => {
+  const gameFiles = collectFilesRecursive(join(ROOT_DIR, 'game'));
+  assert.ok(gameFiles.length >= 35, 'Expected modular game/ source tree');
+
+  for (const filePath of gameFiles) {
+    const content = readFileSync(filePath, 'utf8');
+    assert.equal(/https?:\/\//i.test(content), false, `Unexpected external URL in ${filePath}`);
+  }
+
+  const trailsSrc = readFileSync(join(ROOT_DIR, 'game/src/effects/trails.js'), 'utf8');
+  assert.match(trailsSrc, /AdditiveBlending/, 'Nitro plasma and taillight trails use AdditiveBlending');
+  assert.match(trailsSrc, /depthWrite:\s*false/, 'Nitro plasma disables depthWrite');
+
+  const reflectionsSrc = readFileSync(join(ROOT_DIR, 'game/src/effects/reflections.js'), 'utf8');
+  assert.match(reflectionsSrc, /AdditiveBlending/, 'Wet-asphalt reflections use AdditiveBlending');
+
+  const propsSrc = readFileSync(join(ROOT_DIR, 'game/src/world/props.js'), 'utf8');
+  assert.match(propsSrc, /CatmullRomCurve3/, 'Night market lanterns hang on catenary cables');
+  assert.equal(/TorusGeometry\(13\.5/.test(propsSrc), false, 'Abstract floating sky rings removed');
+
+  const garageSrc = readFileSync(join(ROOT_DIR, 'game/src/world/garage3d.js'), 'utf8');
+  assert.match(garageSrc, /atlas\.garageWall/, 'Garage walls use textured industrial material');
+  assert.match(garageSrc, /atlas\.toolCabinet/, 'Garage includes textured rolling tool chests');
+  assert.match(garageSrc, /atlas\.hydraulicPillar/, 'Garage includes textured hydraulic lift columns');
+
+  const charsSrc = readFileSync(join(ROOT_DIR, 'game/src/entities/characters3d.js'), 'utf8');
+  assert.match(charsSrc, /shoulderYoke/, 'Character rigs include structured jacket shoulders');
+  assert.match(charsSrc, /AdditiveBlending/, 'Character muzzle flashes use additive starburst');
 });

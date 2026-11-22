@@ -1,21 +1,56 @@
-// Solara Bay: Neon Dynasty (V5) — Dusk Wet-Asphalt Specular Sheen, Siren & Brake Light Reflections
-// Renders wide red/blue police strobe reflection pools, crimson brake reflections, golden sunset road sheen,
-// and the Falcon-1 helicopter spotlight ground lock ring across the 4-lane asphalt.
+// Solara Bay: Neon Dynasty (V6) — Soft Additive Wet-Asphalt Specular Reflections
+// Uses feathered longitudinal wet-pavement gradients with THREE.AdditiveBlending and Mulberry32
+// micro-grain modulation so siren strobes, brake light trails, plasma nitro, and sunset sheen
+// melt smoothly into the dusk asphalt without hard circles or harsh planes.
 
 const THREE = window.THREE;
+import { createPRNG } from '../core/random.js';
 
-function createRadialGlowPoolTexture(innerRgba, midRgba, outerRgba = 'rgba(0,0,0,0)') {
+function createSoftWetGlowTexture(coreRgb, midRgb, seed = 404, elongated = true) {
   const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
+  canvas.width = 256;
+  canvas.height = 256;
   const ctx = canvas.getContext('2d');
+  const rng = createPRNG(seed);
 
-  const grad = ctx.createRadialGradient(64, 64, 6, 64, 64, 62);
-  grad.addColorStop(0.0, innerRgba);
-  grad.addColorStop(0.52, midRgba);
-  grad.addColorStop(1.0, outerRgba);
+  ctx.clearRect(0, 0, 256, 256);
+
+  // Smooth Gaussian-like multi-stop radial bloom
+  ctx.save();
+  if (elongated) {
+    ctx.translate(128, 128);
+    ctx.scale(0.86, 1.0);
+    ctx.translate(-128, -128);
+  }
+  const grad = ctx.createRadialGradient(128, 128, 4, 128, 128, 122);
+  grad.addColorStop(0.0, `rgba(${coreRgb}, 0.78)`);
+  grad.addColorStop(0.22, `rgba(${coreRgb}, 0.44)`);
+  grad.addColorStop(0.52, `rgba(${midRgb}, 0.18)`);
+  grad.addColorStop(0.78, `rgba(${midRgb}, 0.05)`);
+  grad.addColorStop(1.0, `rgba(${midRgb}, 0.0)`);
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 128, 128);
+  ctx.fillRect(0, 0, 256, 256);
+  ctx.restore();
+
+  // Subtle deterministic wet-asphalt micro-streak specular breakup (masks edge artifacts)
+  ctx.globalCompositeOperation = 'destination-in';
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = 256;
+  maskCanvas.height = 256;
+  const mctx = maskCanvas.getContext('2d');
+  mctx.fillStyle = 'rgba(255, 255, 255, 0.86)';
+  mctx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 420; i++) {
+    const x = rng.range(16, 240);
+    const y = rng.range(16, 240);
+    const w = rng.range(4, 18);
+    const h = rng.range(12, 42);
+    const bright = rng.next() > 0.45;
+    mctx.fillStyle = bright ? 'rgba(255, 255, 255, 0.24)' : 'rgba(180, 180, 180, 0.16)';
+    mctx.fillRect(x, y, w, h);
+  }
+  ctx.drawImage(maskCanvas, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
@@ -25,108 +60,84 @@ function createRadialGlowPoolTexture(innerRgba, midRgba, outerRgba = 'rgba(0,0,0
 export function createAsphaltReflectionSystem(scene) {
   const reflectionGroup = new THREE.Group();
 
-  const redSirenTex = createRadialGlowPoolTexture(
-    'rgba(255, 32, 72, 0.85)',
-    'rgba(255, 18, 56, 0.42)'
-  );
-  const blueSirenTex = createRadialGlowPoolTexture(
-    'rgba(18, 224, 255, 0.85)',
-    'rgba(0, 150, 255, 0.42)'
-  );
-  const brakeGlowTex = createRadialGlowPoolTexture(
-    'rgba(255, 38, 60, 0.82)',
-    'rgba(255, 20, 42, 0.34)'
-  );
-  const spotlightGroundTex = createRadialGlowPoolTexture(
-    'rgba(255, 248, 195, 0.62)',
-    'rgba(255, 215, 118, 0.26)'
-  );
-  const sunsetSheenTex = createRadialGlowPoolTexture(
-    'rgba(255, 178, 86, 0.32)',
-    'rgba(255, 108, 76, 0.14)'
-  );
+  const redSirenTex = createSoftWetGlowTexture('255, 36, 74', '220, 16, 52', 701, true);
+  const blueSirenTex = createSoftWetGlowTexture('26, 212, 255', '0, 128, 255', 702, true);
+  const brakeGlowTex = createSoftWetGlowTexture('255, 52, 68', '215, 18, 42', 703, true);
+  const nitroGlowTex = createSoftWetGlowTexture('92, 236, 255', '18, 152, 255', 704, true);
+  const spotlightGroundTex = createSoftWetGlowTexture('255, 246, 202', '255, 205, 112', 705, false);
+  const sunsetSheenTex = createSoftWetGlowTexture('255, 174, 96', '255, 108, 78', 706, true);
 
-  // 1. Golden-Hour Wet-Asphalt Specular Sheen Strips along Palm Boulevard (x = 0)
-  for (let z = -180; z <= 140; z += 42) {
+  function makeAdditiveMat(map, opacity) {
+    return new THREE.MeshBasicMaterial({
+      map,
+      transparent: true,
+      opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false,
+    });
+  }
+
+  // 1. Subtle Golden-Hour Wet-Asphalt Specular Sheen along Palm Boulevard (x = 0)
+  for (let z = -180; z <= 140; z += 44) {
     const sheen = new THREE.Mesh(
-      new THREE.PlaneGeometry(19, 34),
-      new THREE.MeshBasicMaterial({
-        map: sunsetSheenTex,
-        transparent: true,
-        opacity: 0.8,
-        depthWrite: false,
-        fog: false,
-      })
+      new THREE.PlaneGeometry(20, 38),
+      makeAdditiveMat(sunsetSheenTex, 0.28)
     );
     sheen.rotation.x = -Math.PI / 2;
-    sheen.position.set(0, 0.026, z);
+    sheen.position.set(0, 0.024, z);
     sheen.renderOrder = 2;
     reflectionGroup.add(sheen);
   }
 
-  // 2. Hero Car Crimson Taillight / Brake Asphalt Reflection Pool
+  // 2. Hero Car Soft Crimson Brake Reflection + Additive Blue Nitro Underglow Streak
   const heroBrakePool = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.4, 6.2),
-    new THREE.MeshBasicMaterial({
-      map: brakeGlowTex,
-      transparent: true,
-      opacity: 0.92,
-      depthWrite: false,
-      fog: false,
-    })
+    new THREE.PlaneGeometry(4.8, 7.6),
+    makeAdditiveMat(brakeGlowTex, 0.62)
   );
   heroBrakePool.rotation.x = -Math.PI / 2;
-  heroBrakePool.position.set(1.15, 0.032, -21.8);
+  heroBrakePool.position.set(1.15, 0.03, -21.8);
   heroBrakePool.renderOrder = 4;
   reflectionGroup.add(heroBrakePool);
 
-  // 3. Falcon-1 Helicopter Spotlight Ground Target Pool on the Boulevard
+  const heroNitroPool = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.4, 6.4),
+    makeAdditiveMat(nitroGlowTex, 0.72)
+  );
+  heroNitroPool.rotation.x = -Math.PI / 2;
+  heroNitroPool.position.set(1.15, 0.032, -21.2);
+  heroNitroPool.renderOrder = 5;
+  reflectionGroup.add(heroNitroPool);
+
+  // 3. Falcon-1 Helicopter Soft Volumetric Ground Lock Pool on the Boulevard
   const heliSpotPool = new THREE.Mesh(
-    new THREE.PlaneGeometry(14.0, 14.0),
-    new THREE.MeshBasicMaterial({
-      map: spotlightGroundTex,
-      transparent: true,
-      opacity: 0.88,
-      depthWrite: false,
-      fog: false,
-    })
+    new THREE.PlaneGeometry(15.5, 15.5),
+    makeAdditiveMat(spotlightGroundTex, 0.56)
   );
   heliSpotPool.rotation.x = -Math.PI / 2;
-  heliSpotPool.position.set(-0.5, 0.028, -41.5);
+  heliSpotPool.position.set(-0.5, 0.026, -41.5);
   heliSpotPool.renderOrder = 3;
   reflectionGroup.add(heliSpotPool);
 
-  // 4. Police Cruiser Dual Red & Blue Wet-Asphalt Siren Reflection Pools (up to 4 cruisers)
+  // 4. Police Cruiser Soft Wet-Asphalt Red & Blue Strobe Reflection Pools (up to 4 cruisers)
   const cruiserPools = [];
   for (let i = 0; i < 4; i++) {
     const pair = new THREE.Group();
     const redPool = new THREE.Mesh(
-      new THREE.PlaneGeometry(6.8, 7.6),
-      new THREE.MeshBasicMaterial({
-        map: redSirenTex,
-        transparent: true,
-        opacity: 0.9,
-        depthWrite: false,
-        fog: false,
-      })
+      new THREE.PlaneGeometry(7.8, 10.2),
+      makeAdditiveMat(redSirenTex, 0.62)
     );
     redPool.rotation.x = -Math.PI / 2;
-    redPool.position.set(-1.65, 0.031, 0);
+    redPool.position.set(-1.55, 0.029, -0.4);
     redPool.renderOrder = 4;
     pair.add(redPool);
 
     const bluePool = new THREE.Mesh(
-      new THREE.PlaneGeometry(6.8, 7.6),
-      new THREE.MeshBasicMaterial({
-        map: blueSirenTex,
-        transparent: true,
-        opacity: 0.9,
-        depthWrite: false,
-        fog: false,
-      })
+      new THREE.PlaneGeometry(7.8, 10.2),
+      makeAdditiveMat(blueSirenTex, 0.62)
     );
     bluePool.rotation.x = -Math.PI / 2;
-    bluePool.position.set(1.65, 0.031, 0);
+    bluePool.position.set(1.55, 0.029, -0.4);
     bluePool.renderOrder = 4;
     pair.add(bluePool);
 
@@ -139,20 +150,30 @@ export function createAsphaltReflectionSystem(scene) {
   function syncWithEntities(heroCar, cruisers, helicopter, time = 1.25) {
     if (heroCar) {
       const h = heroCar.rotation.y;
+      const sinH = Math.sin(h);
+      const cosH = Math.cos(h);
       heroBrakePool.position.set(
-        heroCar.position.x - Math.sin(h) * 2.6,
-        0.032,
-        heroCar.position.z - Math.cos(h) * 2.6
+        heroCar.position.x - sinH * 2.9,
+        0.03,
+        heroCar.position.z - cosH * 2.9
       );
       heroBrakePool.rotation.z = -h;
       heroBrakePool.visible = heroCar.visible;
+
+      heroNitroPool.position.set(
+        heroCar.position.x - sinH * 3.15,
+        0.032,
+        heroCar.position.z - cosH * 3.15
+      );
+      heroNitroPool.rotation.z = -h;
+      heroNitroPool.visible = Boolean(heroCar.visible && heroCar.userData && heroCar.userData.nitroActive);
     }
 
     if (helicopter && helicopter.mesh) {
       heliSpotPool.visible = helicopter.mesh.visible;
       heliSpotPool.position.set(
         helicopter.mesh.position.x,
-        0.028,
+        0.026,
         helicopter.mesh.position.z + 6.2
       );
     }
@@ -168,14 +189,15 @@ export function createAsphaltReflectionSystem(scene) {
       cp.pair.visible = true;
       cp.pair.position.set(cruiser.position.x, 0, cruiser.position.z);
       cp.pair.rotation.y = cruiser.rotation.y;
-      cp.redPool.material.opacity = pulse ? 0.94 : 0.48;
-      cp.bluePool.material.opacity = !pulse ? 0.94 : 0.48;
+      cp.redPool.material.opacity = pulse ? 0.68 : 0.34;
+      cp.bluePool.material.opacity = !pulse ? 0.68 : 0.34;
     }
   }
 
   return {
     reflectionGroup,
     heroBrakePool,
+    heroNitroPool,
     heliSpotPool,
     cruiserPools,
     syncWithEntities,

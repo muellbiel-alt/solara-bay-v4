@@ -1287,6 +1287,8 @@ html, body {
   border-radius: 3px;
   background: rgba(36, 229, 255, 0.18);
   color: var(--accent-cyan);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .hub-card-badge.badge-gold {

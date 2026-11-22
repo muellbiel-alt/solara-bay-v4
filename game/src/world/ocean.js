@@ -75,19 +75,51 @@ export function buildCoastalOcean(cityGroup, atlas) {
     foamStrips.push(strip);
   }
 
-  // 4. Golden Sunset Shimmer Glint Ribbons on the Turquoise Water
-  for (let z = -180; z <= 120; z += 28) {
+  // 4. Soft Additive Golden-Coral Sunset Reflection Path shimmering on the Turquoise Water
+  const sunReflectCanvas = document.createElement('canvas');
+  sunReflectCanvas.width = 256;
+  sunReflectCanvas.height = 256;
+  const srCtx = sunReflectCanvas.getContext('2d');
+  const srGrad = srCtx.createRadialGradient(128, 128, 8, 128, 128, 122);
+  srGrad.addColorStop(0.0, 'rgba(255, 232, 148, 0.68)');
+  srGrad.addColorStop(0.38, 'rgba(255, 168, 96, 0.34)');
+  srGrad.addColorStop(0.76, 'rgba(255, 114, 86, 0.10)');
+  srGrad.addColorStop(1.0, 'rgba(255, 114, 86, 0.0)');
+  srCtx.fillStyle = srGrad;
+  srCtx.fillRect(0, 0, 256, 256);
+  const sunReflectTex = new THREE.CanvasTexture(sunReflectCanvas);
+  sunReflectTex.needsUpdate = true;
+
+  const sunPathMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(58, 180),
+    new THREE.MeshBasicMaterial({
+      map: sunReflectTex,
+      transparent: true,
+      opacity: 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false,
+    })
+  );
+  sunPathMesh.rotation.x = -Math.PI / 2;
+  sunPathMesh.rotation.z = -0.34;
+  sunPathMesh.position.set(78, -0.008, -125);
+  oceanGroup.add(sunPathMesh);
+
+  for (let z = -190; z <= 110; z += 26) {
     const glint = new THREE.Mesh(
-      new THREE.PlaneGeometry(14 + (Math.abs(z) % 8), 1.4),
+      new THREE.PlaneGeometry(12 + (Math.abs(z) % 8), 1.0),
       new THREE.MeshBasicMaterial({
-        color: 0xffe49c,
+        color: 0xffe6a6,
         transparent: true,
-        opacity: 0.58,
+        opacity: 0.42,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
         fog: false,
       })
     );
     glint.rotation.x = -Math.PI / 2;
-    glint.position.set(52 + ((Math.abs(z) * 3) % 24), -0.015, z);
+    glint.position.set(54 + ((Math.abs(z) * 3) % 28), -0.012, z);
     oceanGroup.add(glint);
   }
 

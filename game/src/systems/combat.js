@@ -41,21 +41,21 @@ export function createCombatSystem(scene, audioSynth) {
     combatNPCs.push(npc);
   }
 
-  // Persistent firefight tracers for Harbor Night Market ambush
+  // Persistent firefight tracers aligned directly to the horizontal gun barrels in Shot 2
   const firefightTracerPairs = [
     {
-      from: new THREE.Vector3(-75.2, 1.32, 124.2),
-      to: new THREE.Vector3(-75.8, 1.35, 102.5),
+      from: new THREE.Vector3(-75.78, 1.44, 123.95),
+      to: new THREE.Vector3(-75.8, 1.38, 101.2),
       color: 0xffe46b,
     },
     {
-      from: new THREE.Vector3(-79.1, 1.35, 120.8),
-      to: new THREE.Vector3(-73.0, 1.32, 102.2),
+      from: new THREE.Vector3(-79.77, 1.44, 120.25),
+      to: new THREE.Vector3(-73.0, 1.38, 102.2),
       color: 0x24e5ff,
     },
     {
-      from: new THREE.Vector3(-72.8, 1.35, 102.4),
-      to: new THREE.Vector3(-76.5, 1.25, 121.0),
+      from: new THREE.Vector3(-72.45, 1.44, 103.25),
+      to: new THREE.Vector3(-76.5, 1.32, 121.0),
       color: 0xff5e6c,
     },
   ];

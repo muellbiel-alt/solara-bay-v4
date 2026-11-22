@@ -219,26 +219,36 @@ export function createBulletTracer(scene, startVec, endVec, colorHex = 0xffe066)
   tracerGroup.position.copy(mid);
   tracerGroup.lookAt(endVec);
 
-  const coreGeo = new THREE.CylinderGeometry(0.045, 0.045, len, 6);
+  const coreGeo = new THREE.CylinderGeometry(0.024, 0.024, len, 6);
   coreGeo.rotateX(Math.PI / 2);
   const coreMesh = new THREE.Mesh(
     coreGeo,
-    new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false })
+    new THREE.MeshBasicMaterial({
+      color: 0xfffef2,
+      transparent: true,
+      opacity: 0.92,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false,
+    })
   );
+  coreMesh.renderOrder = 11;
   tracerGroup.add(coreMesh);
 
-  const glowGeo = new THREE.CylinderGeometry(0.11, 0.11, len, 8);
+  const glowGeo = new THREE.CylinderGeometry(0.072, 0.072, len, 8);
   glowGeo.rotateX(Math.PI / 2);
   const glowMesh = new THREE.Mesh(
     glowGeo,
     new THREE.MeshBasicMaterial({
       color: colorHex,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.58,
+      blending: THREE.AdditiveBlending,
       depthWrite: false,
       fog: false,
     })
   );
+  glowMesh.renderOrder = 10;
   tracerGroup.add(glowMesh);
 
   scene.add(tracerGroup);

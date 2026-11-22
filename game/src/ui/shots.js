@@ -1,6 +1,6 @@
-// Solara Bay: Neon Dynasty (V5) — Deterministic ?shot= Staging Director for Real WebGL Captures
-// Stages all 4 required screenshots (1-chase-cover.png, 2-firefight.png, 3-garage.png, 4-hub-map.png)
-// with sculpted vehicles, wet-asphalt siren reflections, high-contrast blasts, and turquoise ocean clarity.
+// Solara Bay: Neon Dynasty (V6) — Deterministic ?shot= Staging Director for Real WebGL Captures
+// Stages all 4 screenshots (1-chase-cover.png, 2-firefight.png, 3-garage.png, 4-hub-map.png) with
+// additive plasma nitrous, wet-asphalt reflections, coastal pedestrians, grounded lanterns, and 3D garage.
 
 export function applyDeterministicShotStage(shotParam, ctx) {
   const {
@@ -8,6 +8,7 @@ export function applyDeterministicShotStage(shotParam, ctx) {
     heroCar,
     playerRig,
     policeSystem,
+    trafficSystem,
     helicopter,
     missionSystem,
     combatSystem,
@@ -19,6 +20,10 @@ export function applyDeterministicShotStage(shotParam, ctx) {
 
   const shot = (shotParam || 'chase').toLowerCase();
 
+  if (trafficSystem && trafficSystem.resetForShot) {
+    trafficSystem.resetForShot();
+  }
+
   if (shot === 'chase' || shot === '1' || shot === 'cover' || shot === 'start') {
     // Shot 1: 1-chase-cover.png — 4★ Police Chase on Palm Boulevard at Golden Hour
     setGameMode('chase');
@@ -26,7 +31,7 @@ export function applyDeterministicShotStage(shotParam, ctx) {
     playerRig.visible = false;
     heroCar.visible = true;
 
-    // Sculpted Kestrel GT in dynamic 3/4 drift showing fastback greenhouse, flared fenders, rims & 3-layer nitro
+    // Sculpted Kestrel GT in dynamic 3/4 drift showing fastback greenhouse, rims & additive plasma nitro
     heroCar.position.set(1.15, 0, -24.5);
     heroCar.rotation.y = Math.PI + 0.34;
     heroCar.userData.speed = 138;
@@ -67,9 +72,9 @@ export function applyDeterministicShotStage(shotParam, ctx) {
     hud.setReticleVisible(false);
     hud.setContextPrompt(false);
 
-    // Dynamic chase framing showing hero coupe, cruisers, helicopter, hotels on left, and turquoise ocean & curved palms on right
+    // Dynamic chase framing: hero coupe, cruisers, helicopter, detailed rooftops left, sunset & ocean right
     camera.position.set(2.15, 3.65, -14.6);
-    camera.lookAt(1.35, 2.15, -48.0);
+    camera.lookAt(1.35, 2.25, -48.0);
   } else if (shot === 'firefight' || shot === '2' || shot === 'play') {
     // Shot 2: 2-firefight.png — On-Foot Firefight & Carjacking at Harbor Docks / Night Market
     setGameMode('onfoot');
@@ -102,31 +107,32 @@ export function applyDeterministicShotStage(shotParam, ctx) {
     hud.setContextPrompt(true, 'JACK KESTREL GT');
 
     camera.position.set(-73.9, 2.52, 130.5);
-    camera.lookAt(-75.4, 1.65, 102.0);
+    camera.lookAt(-75.4, 1.72, 102.0);
   } else if (shot === 'garage' || shot === '3') {
-    // Shot 3: 3-garage.png — Costa Customs 3D Garage & Armory Turntable
+    // Shot 3: 3-garage.png — Detailed Costa Customs 3D Workshop Bay & Turntable
     setGameMode('garage');
     menus.setScreenMode('garage');
     playerRig.visible = false;
     heroCar.visible = true;
 
-    heroCar.position.set(-182.4, 0.22, 120.0);
+    heroCar.position.set(-182.6, 0.22, 120.2);
     heroCar.rotation.y = 2.32;
     heroCar.userData.speed = 0;
     heroCar.userData.setNitroActive(false);
 
-    camera.position.set(-176.6, 2.75, 126.2);
-    camera.lookAt(-180.4, 1.25, 119.2);
+    // Frame full Kestrel GT on left turntable, spare alloy tires, red tool chests, hydraulic pillars & ceiling LED bars
+    camera.position.set(-175.8, 2.48, 127.1);
+    camera.lookAt(-181.4, 1.82, 118.6);
   } else if (shot === 'hub' || shot === '4' || shot === 'map' || shot === 'end') {
-    // Shot 4: 4-hub-map.png — Full City Map + 10-Mission Career + 3 Save Slots over 3D Sunset Skyline
+    // Shot 4: 4-hub-map.png — Full City Map + 10-Mission Career + 3 Save Slots over V6 Sunset Skyline
     setGameMode('hub');
     menus.setScreenMode('hub');
     playerRig.visible = false;
     heroCar.visible = true;
     heroCar.position.set(1.4, 0, -24.0);
 
-    camera.position.set(28.0, 22.0, 32.0);
-    camera.lookAt(-24.0, 12.0, -60.0);
+    camera.position.set(22.0, 18.5, 24.0);
+    camera.lookAt(-26.0, 17.5, -75.0);
   }
 
   if (reflectionSystem) {

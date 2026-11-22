@@ -107,6 +107,7 @@ function bootstrapSolaraBay() {
     heroCar,
     playerRig,
     policeSystem,
+    trafficSystem,
     helicopter,
     missionSystem,
     combatSystem,
@@ -245,15 +246,25 @@ function bootstrapSolaraBay() {
   };
 
   let lastTime = performance.now();
+  let shotWarmupFrames = 0;
 
   function animate(now) {
+    if (isShotCapture) {
+      if (shotWarmupFrames < 2) {
+        shotWarmupFrames++;
+        renderScene();
+        requestAnimationFrame(animate);
+      }
+      return;
+    }
+
     requestAnimationFrame(animate);
     const rawDelta = (now - lastTime) / 1000;
     lastTime = now;
 
     handleInteractiveHotkeys();
 
-    if (!isShotCapture && !simClock.isPaused()) {
+    if (!simClock.isPaused()) {
       const stepsRun = simClock.advance(rawDelta, updateSimulationStep);
       if (stepsRun > 0) {
         syncHud(simClock.getSimTime());
