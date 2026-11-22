@@ -1,19 +1,288 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Block Dodger</title>
-<style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #11141b; }
-  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-  /* Read aloud, never shown: the status line screen readers announce. */
-  #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solara Bay: Neon Dynasty</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<canvas id="game" aria-label="Block Dodger: move the paddle left and right to dodge falling blocks and catch coins"></canvas>
-<p id="status" role="status" aria-live="polite"></p>
-<script type="module" src="./src/main.js"></script>
+  <div id="viewport-wrap">
+    <canvas id="game" aria-label="Solara Bay: Neon Dynasty 3D Open-World Crime Game"></canvas>
+
+    <!-- Action-First Top Sky Badge (compact, zero dark backdrop, leaves 3D sky & helicopter clear) -->
+    <header id="sky-brand-badge" class="sky-brand">
+      <div class="sky-brand-main">SOLARA BAY <span class="sky-brand-sub">NEON DYNASTY</span></div>
+      <div class="sky-brand-meta">4 DISTRICTS · 10 STORY MISSIONS · SBPD TACTICAL AI · COSTA CUSTOMS</div>
+    </header>
+
+    <!-- HUD Layer: Anchored tightly to 4 corners so >= 72% of 3D viewport remains open -->
+    <div id="hud-layer" class="hud-layer">
+      <!-- Top-Left: Mission Stage Card + Tactical Police Dispatch -->
+      <aside class="hud-corner hud-top-left">
+        <section id="mission-card" class="hud-panel mission-card">
+          <div class="mission-header">
+            <span id="mission-tag" class="badge-amber">MISSION 6/10</span>
+            <span id="mission-title" class="mission-name">CROWN JEWEL CONVOY</span>
+            <span id="mission-timer" class="mission-clock">02:14</span>
+          </div>
+          <div class="stage-row">
+            <span id="mission-stage-badge" class="stage-pill">STAGE 3/4</span>
+            <div id="stage-segments" class="stage-segments">
+              <span class="seg done"></span>
+              <span class="seg done"></span>
+              <span class="seg active"></span>
+              <span class="seg"></span>
+            </div>
+          </div>
+          <p id="mission-objective" class="mission-obj">Intercept the syndicate armored transport &amp; break SBPD containment</p>
+          <div class="mission-next">
+            <span class="next-label">NEXT</span>
+            <span id="mission-next-text">Deliver contraband to Pacifica Pier Safehouse</span>
+          </div>
+        </section>
+
+        <section id="police-dispatch-card" class="hud-panel dispatch-card">
+          <div class="dispatch-header">
+            <span class="dispatch-siren-dot"></span>
+            <span class="dispatch-title">SBPD TACTICAL DISPATCH</span>
+            <span id="dispatch-unit-count" class="dispatch-count">5 UNITS · CODE 4</span>
+          </div>
+          <div id="dispatch-list" class="dispatch-list"></div>
+          <div id="dispatch-footer" class="dispatch-footer">AIR-1 FALCON SPOTLIGHT LOCK · ROADBLOCK AHEAD</div>
+        </section>
+      </aside>
+
+      <!-- Top-Right: Cash, Clock, Wanted 5 Stars, Rank, 4-Slot Weapon Hotbar, Crew Abilities -->
+      <aside class="hud-corner hud-top-right">
+        <section class="hud-panel status-top-card">
+          <div class="cash-clock-row">
+            <span id="hud-clock" class="hud-time">17:45</span>
+            <span id="hud-cash" class="hud-cash">$148,650</span>
+          </div>
+          <div class="wanted-row">
+            <div id="wanted-stars" class="wanted-stars" aria-label="Wanted Level">
+              <span class="star active">★</span>
+              <span class="star active">★</span>
+              <span class="star active">★</span>
+              <span class="star active">★</span>
+              <span class="star">★</span>
+            </div>
+            <span id="wanted-status-pill" class="wanted-pill">AIR UNIT &amp; INTERCEPTORS</span>
+          </div>
+          <div class="rank-row">
+            <span id="hud-rank-badge" class="rank-badge">RANK 7 · KINGPIN</span>
+            <div class="rank-bar-track"><div id="hud-rank-fill" class="rank-bar-fill" style="width:78%"></div></div>
+            <span id="hud-rp-text" class="rank-rp">4,850 / 6,000 RP</span>
+          </div>
+        </section>
+
+        <section id="weapon-hotbar" class="weapon-hotbar" aria-label="Weapon Hotbar"></section>
+
+        <section id="crew-bar" class="crew-bar" aria-label="Crew Tactical Abilities"></section>
+      </aside>
+
+      <!-- Center Reticle & Floating Context Prompt ([E] JACK KESTREL GT) -->
+      <div id="center-reticle" class="center-reticle hidden">
+        <span class="ret-ring"></span>
+        <span class="ret-dot"></span>
+      </div>
+      <div id="context-prompt" class="context-prompt hidden">
+        <span class="key-cap">E</span>
+        <span id="context-prompt-text">JACK KESTREL GT</span>
+      </div>
+
+      <!-- Bottom-Left: High-Contrast Minimap Radar + District + Health & Armor -->
+      <aside class="hud-corner hud-bottom-left">
+        <div class="district-banner">
+          <span id="hud-district-name" class="district-name">PALM BOULEVARD</span>
+          <span id="hud-street-name" class="street-name">Oceanfront Promenade</span>
+        </div>
+        <div class="minimap-frame">
+          <canvas id="minimap-canvas" width="168" height="168"></canvas>
+          <span class="minimap-north">N</span>
+        </div>
+        <div class="vitals-card hud-panel">
+          <div class="vital-row">
+            <span class="vital-label">HP</span>
+            <div class="vital-track"><div id="hud-hp-fill" class="vital-fill hp-fill" style="width:94%"></div></div>
+            <span id="hud-hp-val" class="vital-val">94</span>
+          </div>
+          <div class="vital-row">
+            <span class="vital-label">ARM</span>
+            <div class="vital-track"><div id="hud-armor-fill" class="vital-fill armor-fill" style="width:82%"></div></div>
+            <span id="hud-armor-val" class="vital-val">82</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Bottom-Center: Compact Portrait Dialogue (strictly anchored at bottom edge so hero car is never covered) -->
+      <section id="dialogue-card" class="hud-panel dialogue-card">
+        <canvas id="dialogue-portrait" width="52" height="52" class="dialogue-avatar"></canvas>
+        <div class="dialogue-content">
+          <div class="dialogue-speaker-row">
+            <span id="dialogue-speaker" class="dialogue-speaker">ELENA VANCE</span>
+            <span id="dialogue-role" class="dialogue-role">SYNDICATE FIXER · COMMS CH-1</span>
+          </div>
+          <p id="dialogue-line" class="dialogue-text">"Falcon-1 has a spotlight lock on Palm Boulevard! Hit the nitro past the pier roadblock!"</p>
+        </div>
+      </section>
+
+      <!-- Bottom-Right: Speedometer + Vehicle Condition + Radio Pill (strictly inside viewport, 0 clipping) -->
+      <aside class="hud-corner hud-bottom-right">
+        <div class="radio-pill">
+          <span class="radio-icon">♪</span>
+          <span id="hud-radio-station" class="radio-text">SOLARA FM 98.4 · "GOLDEN MIRAGE"</span>
+        </div>
+        <section id="speedo-card" class="hud-panel speedo-card">
+          <div class="veh-top-row">
+            <span id="hud-vehicle-name" class="veh-name">KESTREL GT</span>
+            <span id="hud-gear-badge" class="gear-badge">S5</span>
+          </div>
+          <div class="speed-main-row">
+            <span id="hud-speed-value" class="speed-digits">138</span>
+            <div class="speed-unit-col">
+              <span id="hud-speed-unit" class="speed-unit">KM/H</span>
+              <span id="hud-nitro-badge" class="nitro-tag">NITRO READY</span>
+            </div>
+          </div>
+          <div class="veh-bars">
+            <div class="veh-bar-row">
+              <span class="veh-bar-lbl">CHASSIS</span>
+              <div class="veh-bar-track"><div id="hud-veh-hp-fill" class="veh-bar-fill" style="width:88%"></div></div>
+              <span id="hud-veh-hp-pct" class="veh-bar-pct">88%</span>
+            </div>
+            <div class="veh-bar-row">
+              <span class="veh-bar-lbl">NITROUS</span>
+              <div class="veh-bar-track"><div id="hud-nitro-fill" class="veh-bar-fill nitro-fill" style="width:92%"></div></div>
+              <span id="hud-nitro-pct" class="veh-bar-pct">92%</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <!-- Shot 3 Overlay: Costa Customs 3D Garage & Armory Drawer (Right side only, leaving left 62% open for 3D turntable car) -->
+    <section id="garage-overlay" class="garage-overlay hidden" aria-label="Costa Customs 3D Garage & Armory">
+      <div class="garage-banner-left">
+        <div>
+          <div class="garage-logo">COSTA CUSTOMS &amp; ARMORY</div>
+          <div class="garage-sub">HARBOR DOCKS BAY 4 · MASTER MECHANIC MATEO CRUZ</div>
+        </div>
+        <div class="garage-turntable-card">
+          <div class="tt-veh-title" id="garage-veh-title">KESTREL GT · TWIN-TURBO V8</div>
+          <div class="tt-tags">
+            <span class="tt-tag active">✓ STAGE 3 ECU</span>
+            <span class="tt-tag active">✓ KEVLAR SHELL</span>
+            <span class="tt-tag active">✓ DIRECT NITRO</span>
+            <span class="tt-tag">SOLAR CRIMSON</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="garage-drawer">
+        <div class="garage-drawer-head">
+          <div>
+            <div class="gd-eyebrow">PERFORMANCE &amp; ORDNANCE</div>
+            <h2 class="gd-title">WORKSHOP BAY</h2>
+          </div>
+          <div class="gd-balance">
+            <span class="gd-bal-lbl">CASH BALANCE</span>
+            <span id="garage-cash" class="gd-bal-val">$148,650</span>
+          </div>
+        </div>
+
+        <div class="garage-stats-block" id="garage-stat-bars"></div>
+
+        <div class="garage-section-lbl">CUSTOM METALLIC RESPRAY (CLEARS WANTED HEAT)</div>
+        <div class="paint-swatches" id="garage-paint-swatches"></div>
+
+        <div class="garage-section-lbl">VEHICLE UPGRADES &amp; TACTICAL ARMORY</div>
+        <div class="garage-upgrade-list" id="garage-upgrade-list"></div>
+
+        <div class="garage-actions">
+          <button id="btn-garage-install" class="btn-primary">INSTALL UPGRADE</button>
+          <button id="btn-garage-exit" class="btn-secondary">DRIVE OUT [ESC]</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Shot 4 Overlay: Full City Map + Career Progression + 3 Save/Load Slots + Start/Continue/Restart Hub -->
+    <section id="hub-overlay" class="hub-overlay hidden" aria-label="Solara Bay Career & City Map Hub">
+      <div class="hub-container">
+        <header class="hub-header">
+          <div class="hub-brand">
+            <h1 class="hub-title">SOLARA BAY: NEON DYNASTY</h1>
+            <p class="hub-subtitle">COASTAL METROPOLIS COMMAND HUB · 4 DISTRICTS · 10 CAMPAIGN MISSIONS</p>
+          </div>
+          <div class="hub-top-buttons">
+            <button id="btn-hub-continue" class="btn-hub-main">START / CONTINUE</button>
+            <button id="btn-hub-garage" class="btn-hub-alt">COSTA CUSTOMS [G]</button>
+            <button id="btn-hub-restart" class="btn-hub-danger">RESTART CAREER</button>
+          </div>
+        </header>
+
+        <div class="hub-grid">
+          <!-- Column 1: Interactive 4-District City Map & Legend -->
+          <div class="hub-card hub-map-panel">
+            <div class="hub-card-head">
+              <span class="hub-card-title">INTERACTIVE 4-DISTRICT GPS MAP</span>
+              <span class="hub-card-badge">WAYPOINT LOCKED · 0.64 KM</span>
+            </div>
+            <div class="hub-map-wrap">
+              <canvas id="hub-map-canvas" width="380" height="310"></canvas>
+            </div>
+            <div class="hub-map-legend">
+              <span class="leg-item"><i class="leg-dot m-dot"></i>Story Mission</span>
+              <span class="leg-item"><i class="leg-dot g-dot"></i>Costa Customs</span>
+              <span class="leg-item"><i class="leg-dot h-dot"></i>Safehouse</span>
+              <span class="leg-item"><i class="leg-dot a-dot"></i>Armory</span>
+              <span class="leg-item"><i class="leg-dot p-dot"></i>SBPD Precinct</span>
+            </div>
+          </div>
+
+          <!-- Column 2: 10 Story Missions Progression & Career Metrics -->
+          <div class="hub-card hub-missions-panel">
+            <div class="hub-card-head">
+              <span class="hub-card-title">10 STORY MISSIONS &amp; CAREER</span>
+              <span id="hub-completion-pct" class="hub-card-badge badge-gold">74.5% COMPLETE</span>
+            </div>
+            <div id="hub-mission-list" class="hub-mission-list"></div>
+            <div id="hub-career-metrics" class="hub-career-metrics"></div>
+          </div>
+
+          <!-- Column 3: 3 Active Save/Load Slots + Crew & Controls -->
+          <div class="hub-card hub-saves-panel">
+            <div class="hub-card-head">
+              <span class="hub-card-title">3 SAVE / LOAD SLOTS (LOCALSTORAGE)</span>
+              <span class="hub-card-badge">AUTOSAVE ACTIVE</span>
+            </div>
+            <div id="hub-save-slots" class="hub-save-slots"></div>
+            <div class="hub-crew-box">
+              <div class="hub-section-mini">SYNDICATE CREW SPECIALISTS</div>
+              <div class="hub-crew-row">
+                <span class="hc-pill"><b>[Z] Elena</b> · EMP Jammer</span>
+                <span class="hc-pill"><b>[X] Mateo</b> · Nitro Boost</span>
+                <span class="hc-pill"><b>[C] Kira</b> · Smoke Screen</span>
+              </div>
+            </div>
+            <div class="hub-controls-box">
+              <span><b>WASD</b> Drive / Move</span>
+              <span><b>SPACE</b> Drift / Jump</span>
+              <span><b>SHIFT</b> Nitrous</span>
+              <span><b>LMB</b> Fire Weapon</span>
+              <span><b>E</b> Jack Vehicle</span>
+              <span><b>G</b> 3D Garage</span>
+              <span><b>M / ESC</b> Map &amp; Save Hub</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <p id="status" role="status" aria-live="polite">Solara Bay: Neon Dynasty ready.</p>
+  <script src="./vendor/three.min.js"></script>
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>

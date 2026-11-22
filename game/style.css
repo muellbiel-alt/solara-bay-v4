@@ -1,0 +1,1508 @@
+/* Solara Bay: Neon Dynasty (V4) — High-Contrast Tactical HUD & Studio UI */
+/* Designed for razor-sharp legibility at both 1280x720 and 768x480 contact sheet scale,
+   while keeping >= 72% of the 3D WebGL viewport completely unobstructed. */
+
+:root {
+  --bg-panel: rgba(10, 15, 26, 0.88);
+  --bg-panel-heavy: rgba(9, 13, 23, 0.94);
+  --border-subtle: rgba(255, 255, 255, 0.16);
+  --accent-gold: #ffb830;
+  --accent-amber: #ff942e;
+  --accent-coral: #ff4d5e;
+  --accent-cyan: #24e5ff;
+  --accent-emerald: #2ee889;
+  --text-main: #f8fafd;
+  --text-muted: #a6b4ca;
+  --font-display: 'Impact', 'Arial Black', 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0d1322;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+#viewport-wrap {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#game {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Top-Center Action-First Sky Brand Badge */
+.sky-brand {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  text-align: center;
+  pointer-events: none;
+  padding: 4px 16px 5px;
+  background: linear-gradient(180deg, rgba(10, 15, 28, 0.78) 0%, rgba(10, 15, 28, 0.52) 100%);
+  border: 1px solid rgba(255, 184, 48, 0.45);
+  border-top: 2px solid var(--accent-gold);
+  border-radius: 7px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.sky-brand-main {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  line-height: 1.05;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.sky-brand-sub {
+  color: var(--accent-gold);
+  margin-left: 6px;
+}
+
+.sky-brand-meta {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: var(--accent-cyan);
+  margin-top: 2px;
+}
+
+/* HUD 4-Corner Layout */
+.hud-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hud-corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.hud-top-left {
+  top: 10px;
+  left: 12px;
+  width: 274px;
+}
+
+.hud-top-right {
+  top: 10px;
+  right: 12px;
+  width: 282px;
+  align-items: flex-end;
+}
+
+.hud-bottom-left {
+  bottom: 10px;
+  left: 12px;
+  width: 184px;
+}
+
+.hud-bottom-right {
+  bottom: 10px;
+  right: 12px;
+  width: 222px;
+  align-items: flex-end;
+}
+
+.hud-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 7px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+/* Top-Left: Mission Stage Card */
+.mission-card {
+  padding: 8px 10px;
+  border-left: 3.5px solid var(--accent-gold);
+}
+
+.mission-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+.badge-amber {
+  background: var(--accent-gold);
+  color: #090d16;
+  font-size: 9.5px;
+  font-weight: 900;
+  padding: 2px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.mission-name {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  color: #ffffff;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mission-clock {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent-gold);
+  background: rgba(255, 184, 48, 0.14);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.stage-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 5px;
+}
+
+.stage-pill {
+  font-size: 9.5px;
+  font-weight: 900;
+  color: var(--accent-cyan);
+  letter-spacing: 0.5px;
+}
+
+.stage-segments {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+}
+
+.stage-segments .seg {
+  flex: 1;
+  height: 5px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.stage-segments .seg.done {
+  background: var(--accent-emerald);
+}
+
+.stage-segments .seg.active {
+  background: var(--accent-gold);
+  box-shadow: 0 0 6px var(--accent-gold);
+}
+
+.mission-obj {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.28;
+  margin-bottom: 4px;
+}
+
+.mission-next {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 4px;
+}
+
+.next-label {
+  font-weight: 900;
+  color: var(--accent-cyan);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+
+/* Top-Left: Tactical Police Dispatch */
+.dispatch-card {
+  padding: 7px 10px;
+  border-left: 3.5px solid var(--accent-coral);
+}
+
+.dispatch-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dispatch-siren-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-coral);
+  box-shadow: 0 0 8px var(--accent-coral), 10px 0 0 var(--accent-cyan);
+  margin-right: 10px;
+}
+
+.dispatch-title {
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  color: #ffffff;
+  flex: 1;
+}
+
+.dispatch-count {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--accent-gold);
+}
+
+.dispatch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5px;
+}
+
+.dispatch-row {
+  display: grid;
+  grid-template-columns: 82px 44px 1fr;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.unit-callsign {
+  color: #e9f1ff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.unit-dist {
+  color: var(--text-muted);
+  text-align: right;
+  padding-right: 8px;
+  font-family: var(--font-mono);
+}
+
+.tactic-badge {
+  text-align: center;
+  padding: 1.5px 5px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tactic-ramming {
+  background: #ff2e4c;
+  color: #ffffff;
+}
+
+.tactic-flanking {
+  background: #ff8c24;
+  color: #0b0f19;
+}
+
+.tactic-spotlight {
+  background: #24e5ff;
+  color: #08101e;
+}
+
+.tactic-roadblock {
+  background: #ffd026;
+  color: #090d16;
+}
+
+.tactic-firing {
+  background: #ff477e;
+  color: #ffffff;
+}
+
+.dispatch-footer {
+  margin-top: 5px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  letter-spacing: 0.4px;
+}
+
+/* Top-Right: Cash, Wanted Stars, Rank, Weapons, Crew */
+.status-top-card {
+  width: 100%;
+  padding: 8px 11px;
+  border-right: 3.5px solid var(--accent-emerald);
+}
+
+.cash-clock-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 3px;
+}
+
+.hud-time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.hud-cash {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: var(--accent-emerald);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.wanted-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.wanted-stars {
+  display: flex;
+  gap: 3px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.wanted-stars .star {
+  color: rgba(255, 255, 255, 0.18);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.wanted-stars .star.active {
+  color: var(--accent-gold);
+  text-shadow: 0 0 10px rgba(255, 184, 48, 0.85);
+}
+
+.wanted-pill {
+  background: rgba(255, 46, 76, 0.24);
+  border: 1px solid #ff4d5e;
+  color: #ff99a4;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.rank-badge {
+  color: var(--accent-gold);
+  white-space: nowrap;
+}
+
+.rank-bar-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rank-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-gold), var(--accent-amber));
+}
+
+.rank-rp {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+/* 4-Slot Weapon Hotbar */
+.weapon-hotbar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  width: 100%;
+}
+
+.weapon-slot {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 4px 5px;
+  text-align: center;
+  position: relative;
+}
+
+.weapon-slot.active {
+  background: rgba(34, 25, 10, 0.95);
+  border: 2px solid var(--accent-gold);
+  box-shadow: 0 0 12px rgba(255, 184, 48, 0.45);
+}
+
+.wpn-key {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 8.5px;
+  font-weight: 900;
+  color: var(--text-muted);
+}
+
+.weapon-slot.active .wpn-key {
+  color: var(--accent-gold);
+}
+
+.wpn-name {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #ffffff;
+  margin-top: 8px;
+  letter-spacing: 0.3px;
+}
+
+.wpn-ammo {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+}
+
+.weapon-slot.active .wpn-ammo {
+  color: var(--accent-gold);
+}
+
+/* Compact Crew Ability Row */
+.crew-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  width: 100%;
+}
+
+.crew-pill {
+  background: var(--bg-panel);
+  border: 1px solid rgba(36, 229, 255, 0.32);
+  border-radius: 5px;
+  padding: 3.5px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.crew-pill-top {
+  font-size: 8.5px;
+  font-weight: 900;
+  color: var(--accent-cyan);
+  letter-spacing: 0.3px;
+}
+
+.crew-pill-state {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: var(--accent-emerald);
+}
+
+/* Center Reticle & Carjacking Prompt */
+.center-reticle {
+  position: absolute;
+  top: 47%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ret-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 184, 48, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.ret-dot {
+  width: 5px;
+  height: 5px;
+  background: #ff2e4c;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #ff2e4c;
+}
+
+.context-prompt {
+  position: absolute;
+  top: 57%;
+  left: 55%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(9, 13, 24, 0.94);
+  border: 2px solid var(--accent-gold);
+  border-radius: 6px;
+  padding: 5px 12px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.75);
+}
+
+.key-cap {
+  background: var(--accent-gold);
+  color: #090d16;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+#context-prompt-text {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  color: #ffffff;
+}
+
+/* Bottom-Left: Minimap & Vitals */
+.district-banner {
+  background: var(--bg-panel);
+  border-left: 3px solid var(--accent-cyan);
+  padding: 4px 8px;
+  border-radius: 5px;
+}
+
+.district-name {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 900;
+  color: var(--accent-gold);
+  letter-spacing: 0.5px;
+}
+
+.street-name {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.minimap-frame {
+  position: relative;
+  width: 174px;
+  height: 174px;
+  background: #0b1424;
+  border: 2.5px solid var(--accent-gold);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65);
+}
+
+#minimap-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.minimap-north {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(9, 13, 23, 0.88);
+  color: var(--accent-gold);
+  font-size: 9.5px;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 184, 48, 0.45);
+}
+
+.vitals-card {
+  width: 174px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vital-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 24px;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.vital-label {
+  color: var(--text-muted);
+}
+
+.vital-track {
+  height: 7px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.vital-fill {
+  height: 100%;
+}
+
+.hp-fill {
+  background: linear-gradient(90deg, #2ee889, #70ffae);
+}
+
+.armor-fill {
+  background: linear-gradient(90deg, #24e5ff, #68f0ff);
+}
+
+.vital-val {
+  text-align: right;
+  font-family: var(--font-mono);
+  color: #ffffff;
+}
+
+/* Bottom-Center: Compact Portrait Dialogue Card (low height so hero car sits 100% clear above it) */
+.dialogue-card {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 430px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 2.5px solid var(--accent-gold);
+}
+
+.dialogue-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  border: 1.5px solid var(--accent-cyan);
+  background: #132038;
+  flex-shrink: 0;
+}
+
+.dialogue-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.dialogue-speaker-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.dialogue-speaker {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--accent-cyan);
+  letter-spacing: 0.5px;
+}
+
+.dialogue-role {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--accent-gold);
+}
+
+.dialogue-text {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+/* Bottom-Right: Speedometer & Unclipped Radio Card */
+.radio-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-panel-heavy);
+  border: 1px solid rgba(255, 184, 48, 0.45);
+  border-radius: 5px;
+  padding: 3.5px 9px;
+  max-width: 100%;
+}
+
+.radio-icon {
+  color: var(--accent-gold);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.radio-text {
+  font-size: 10px;
+  font-weight: 800;
+  color: #f3f7ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.speedo-card {
+  width: 100%;
+  padding: 8px 11px;
+  border-right: 3.5px solid var(--accent-gold);
+}
+
+.veh-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.veh-name {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--accent-cyan);
+  letter-spacing: 0.5px;
+}
+
+.gear-badge {
+  background: var(--accent-gold);
+  color: #090d16;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.speed-main-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.speed-digits {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 0.95;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.speed-unit-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.speed-unit {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--accent-gold);
+}
+
+.nitro-tag {
+  font-size: 8.5px;
+  font-weight: 900;
+  color: var(--accent-emerald);
+}
+
+.veh-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.veh-bar-row {
+  display: grid;
+  grid-template-columns: 46px 1fr 28px;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.veh-bar-lbl {
+  color: var(--text-muted);
+}
+
+.veh-bar-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.veh-bar-fill {
+  height: 100%;
+  background: var(--accent-emerald);
+}
+
+.veh-bar-fill.nitro-fill {
+  background: var(--accent-cyan);
+}
+
+.veh-bar-pct {
+  text-align: right;
+  font-family: var(--font-mono);
+  color: #ffffff;
+}
+
+/* Shot 3: Costa Customs 3D Garage & Armory Overlay */
+.garage-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
+  pointer-events: auto;
+}
+
+.garage-banner-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  max-width: 440px;
+  pointer-events: none;
+}
+
+.garage-logo {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  color: var(--accent-gold);
+  background: rgba(9, 13, 23, 0.9);
+  border-left: 5px solid var(--accent-cyan);
+  padding: 6px 14px;
+  border-radius: 6px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65);
+}
+
+.garage-sub {
+  font-size: 11px;
+  font-weight: 900;
+  color: #ffffff;
+  background: rgba(9, 13, 23, 0.86);
+  padding: 4px 12px;
+  border-radius: 4px;
+  margin-top: 5px;
+  display: inline-block;
+  letter-spacing: 0.6px;
+}
+
+.garage-turntable-card {
+  background: rgba(9, 13, 23, 0.9);
+  border: 1.5px solid var(--accent-gold);
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.7);
+}
+
+.tt-veh-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+
+.tt-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tt-tag {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+}
+
+.tt-tag.active {
+  background: rgba(46, 232, 137, 0.22);
+  border: 1px solid var(--accent-emerald);
+  color: var(--accent-emerald);
+}
+
+.garage-drawer {
+  width: 440px;
+  background: var(--bg-panel-heavy);
+  border: 1.5px solid rgba(255, 184, 48, 0.45);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8);
+}
+
+.garage-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  padding-bottom: 8px;
+}
+
+.gd-eyebrow {
+  font-size: 9.5px;
+  font-weight: 900;
+  color: var(--accent-cyan);
+  letter-spacing: 0.8px;
+}
+
+.gd-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.gd-balance {
+  text-align: right;
+}
+
+.gd-bal-lbl {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.gd-bal-val {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--accent-emerald);
+}
+
+.garage-stats-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.g-stat-row {
+  display: grid;
+  grid-template-columns: 92px 1fr 42px;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.g-stat-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.g-stat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-gold), var(--accent-emerald));
+}
+
+.garage-section-lbl {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--accent-gold);
+  letter-spacing: 0.7px;
+}
+
+.paint-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.paint-btn {
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 5px;
+  padding: 5px 4px;
+  font-size: 10px;
+  font-weight: 900;
+  color: #ffffff;
+  cursor: pointer;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.paint-btn.active {
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.garage-upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.upg-item {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.upg-item.selected {
+  background: rgba(255, 184, 48, 0.16);
+  border: 1.5px solid var(--accent-gold);
+}
+
+.upg-badge {
+  font-size: 9.5px;
+  font-weight: 900;
+  text-align: center;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: var(--accent-cyan);
+  color: #07101e;
+}
+
+.upg-name {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.upg-price {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 900;
+  color: var(--accent-gold);
+}
+
+.upg-price.owned {
+  color: var(--accent-emerald);
+}
+
+.garage-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btn-primary, .btn-secondary {
+  border: none;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent-gold);
+  color: #090d16;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Shot 4: Full City Map + Career & Save Hub Overlay */
+.hub-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: linear-gradient(180deg, rgba(8, 12, 22, 0.28) 0%, rgba(8, 12, 22, 0.54) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 18px;
+  pointer-events: auto;
+}
+
+.hub-container {
+  width: 100%;
+  max-width: 1240px;
+  height: 100%;
+  max-height: 690px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hub-header {
+  background: var(--bg-panel-heavy);
+  border: 1.5px solid rgba(255, 184, 48, 0.5);
+  border-radius: 9px;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hub-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  letter-spacing: 1.4px;
+  color: var(--accent-gold);
+}
+
+.hub-subtitle {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  letter-spacing: 0.8px;
+}
+
+.hub-top-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-hub-main, .btn-hub-alt, .btn-hub-danger {
+  border: none;
+  border-radius: 6px;
+  padding: 9px 15px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+}
+
+.btn-hub-main {
+  background: var(--accent-emerald);
+  color: #06130d;
+  box-shadow: 0 0 14px rgba(46, 232, 137, 0.4);
+}
+
+.btn-hub-alt {
+  background: var(--accent-gold);
+  color: #090d16;
+}
+
+.btn-hub-danger {
+  background: rgba(255, 77, 94, 0.22);
+  border: 1.5px solid var(--accent-coral);
+  color: #ffb3ba;
+}
+
+.hub-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 404px 1fr 360px;
+  gap: 10px;
+  min-height: 0;
+}
+
+.hub-card {
+  background: rgba(9, 14, 25, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 9px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  backdrop-filter: blur(4px);
+}
+
+.hub-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 6px;
+}
+
+.hub-card-title {
+  font-size: 11.5px;
+  font-weight: 900;
+  color: var(--accent-gold);
+  letter-spacing: 0.6px;
+}
+
+.hub-card-badge {
+  font-size: 9.5px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(36, 229, 255, 0.18);
+  color: var(--accent-cyan);
+}
+
+.hub-card-badge.badge-gold {
+  background: var(--accent-gold);
+  color: #090d16;
+}
+
+.hub-map-wrap {
+  flex: 1;
+  background: #0a1526;
+  border: 2px solid rgba(255, 184, 48, 0.45);
+  border-radius: 7px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#hub-map-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hub-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.leg-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.leg-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.m-dot { background: var(--accent-gold); }
+.g-dot { background: var(--accent-cyan); }
+.h-dot { background: var(--accent-emerald); }
+.a-dot { background: var(--accent-coral); }
+.p-dot { background: #5a9cff; }
+
+/* Hub Missions List */
+.hub-mission-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4.5px;
+  flex: 1;
+}
+
+.hm-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 4.5px 7px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.hm-item.done {
+  border-left: 3px solid var(--accent-emerald);
+}
+
+.hm-item.active {
+  background: rgba(255, 184, 48, 0.15);
+  border: 1px solid var(--accent-gold);
+  border-left: 3px solid var(--accent-gold);
+}
+
+.hm-rank {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255, 184, 48, 0.22);
+  color: var(--accent-gold);
+}
+
+.hub-career-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.metric-box {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  padding: 5px 7px;
+  text-align: center;
+}
+
+.metric-val {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.metric-lbl {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+/* Hub 3 Save Slots */
+.hub-save-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.save-slot-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 3.5px solid var(--accent-cyan);
+  border-radius: 6px;
+  padding: 7px 9px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.save-slot-card.active {
+  border-left-color: var(--accent-emerald);
+  background: rgba(46, 232, 137, 0.1);
+}
+
+.ss-title {
+  font-size: 11px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.ss-meta {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.ss-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-slot {
+  background: var(--accent-gold);
+  color: #090d16;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 7px;
+  font-size: 9.5px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.btn-slot.load {
+  background: var(--accent-cyan);
+}
+
+.hub-crew-box {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.hub-section-mini {
+  font-size: 9px;
+  font-weight: 900;
+  color: var(--accent-gold);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.hub-crew-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10px;
+}
+
+.hc-pill {
+  color: #e6f0ff;
+}
+
+.hub-controls-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 8px;
+  font-size: 9.5px;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 6px 8px;
+  border-radius: 5px;
+}
+
+.hub-controls-box b {
+  color: var(--accent-gold);
+}

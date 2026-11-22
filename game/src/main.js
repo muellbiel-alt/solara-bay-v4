@@ -1,134 +1,233 @@
-// Boot and the one loop: input is read every frame, the world advances in fixed 1/60 s steps
-// (several in a slow frame, none in a fast one), and the renderer paints what is there. The game
-// moves between four screens: title, play, paused and game over.
-//
-// ?seed=N fixes the falling pattern. ?shot=start|play|end (with &seed=N) stages that scene
-// instead of running the loop, paints it twice and sets window.__shotReady for a screenshot.
-import { BEST_KEY, LIVES, STEP } from './config.js';
-import { createRandom } from './random.js';
-import { createWorld, EVENT_HIT, EVENT_OVER } from './world.js';
-import { ACTION_CONFIRM, ACTION_PAUSE, createInput } from './input.js';
-import { createRenderer, SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_TITLE } from './render.js';
-import { stageShot } from './shots.js';
+// Solara Bay: Neon Dynasty (V4) — Main 3D WebGL Engine Bootstrap, State Machine & Render Loop
 
-/** The longest frame the loop catches up on; a longer stall (a hidden tab) is dropped, not replayed. */
-const MAX_FRAME = 0.25;
+const THREE = window.THREE;
+import { CITY_META } from './core/config.js';
+import { createPRNG } from './core/random.js';
+import { createInputController } from './core/input.js';
+import { createStorageManager } from './core/storage.js';
+import { createTextureAtlas } from './world/textures.js';
+import { setupGoldenHourLighting } from './world/lighting.js';
+import { buildSolaraCity } from './world/city3d.js';
+import { createVehicleManager } from './entities/vehicles3d.js';
+import { createCharacterRig } from './entities/characters3d.js';
+import { createPoliceHelicopter } from './entities/helicopter3d.js';
+import { createTrafficSystem } from './systems/traffic.js';
+import { createPoliceSystem } from './systems/police.js';
+import { createCrewSystem } from './systems/crew.js';
+import { createCombatSystem } from './systems/combat.js';
+import { createMissionSystem } from './systems/missions.js';
+import { createEconomySystem } from './systems/economy.js';
+import { createHudController } from './ui/hud.js';
+import { createMenuController } from './ui/menus.js';
+import { applyDeterministicShotStage } from './ui/shots.js';
+import { createAudioSynth } from './audio/synth.js';
 
-const params = new URLSearchParams(window.location.search);
-const shot = params.get('shot');
-const seedParam = Number.parseInt(params.get('seed') ?? '', 10);
-const seed = Number.isInteger(seedParam) ? seedParam : Math.floor(Math.random() * 4294967296);
+function bootstrapSolaraBay() {
+  const params = new URLSearchParams(window.location.search);
+  const seedParam = Number(params.get('seed')) || CITY_META.seed;
+  const shotParam = params.get('shot');
+  const rng = createPRNG(seedParam);
 
-const canvas = document.getElementById('game');
-const status = document.getElementById('status');
-const world = createWorld(createRandom(seed));
-const renderer = createRenderer(canvas);
-
-function readBest() {
-  try {
-    return Number.parseInt(window.localStorage.getItem(BEST_KEY) ?? '0', 10) || 0;
-  } catch {
-    return 0;
-  }
-}
-
-function saveBest(value) {
-  try {
-    window.localStorage.setItem(BEST_KEY, String(value));
-  } catch {
-    // Storage can be off (private windows): the best score then lasts this visit only.
-  }
-}
-
-function runShot(name) {
-  const scene = stageShot(name, world);
-  let painted = 0;
-  function paint() {
-    renderer.draw(world.state, scene.screen, scene.best);
-    painted += 1;
-    if (painted < 2) requestAnimationFrame(paint);
-    else window.__shotReady = true;
-  }
-  requestAnimationFrame(paint);
-}
-
-function runGame() {
-  const input = createInput(canvas);
-  let screen = SCREEN_TITLE;
-  let best = readBest();
-  let accumulator = 0;
-  let last = performance.now();
-
-  // Screen readers (and anyone watching the page's text) hear the screen changes and each hit.
-  function announce(message) {
-    status.textContent = message;
+  const canvas = document.getElementById('game');
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    preserveDrawingBuffer: true,
+    powerPreference: 'high-performance',
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  if (THREE.sRGBEncoding) {
+    renderer.outputEncoding = THREE.sRGBEncoding;
   }
 
-  function startGame() {
-    world.reset();
-    accumulator = 0;
-    screen = SCREEN_PLAY;
-    announce(`Playing. ${LIVES} lives.`);
-  }
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(56, window.innerWidth / window.innerHeight, 0.25, 1100);
 
-  function endGame() {
-    screen = SCREEN_OVER;
-    if (world.state.score > best) {
-      best = world.state.score;
-      saveBest(best);
-    }
-    announce(`Game over. Score ${world.state.score}. Best ${best}.`);
-  }
+  // Build Texture Atlas, Golden Hour Lighting, and 4-District 3D Coastal City
+  const atlas = createTextureAtlas();
+  const lighting = setupGoldenHourLighting(scene);
+  const city = buildSolaraCity(scene, atlas);
 
-  function handleActions() {
-    const actions = input.takeActions();
-    if (actions & ACTION_CONFIRM && (screen === SCREEN_TITLE || screen === SCREEN_OVER)) startGame();
-    else if (actions & ACTION_PAUSE && screen === SCREEN_PLAY) {
-      screen = SCREEN_PAUSED;
-      announce('Paused.');
-    } else if (actions & (ACTION_PAUSE | ACTION_CONFIRM) && screen === SCREEN_PAUSED) {
-      screen = SCREEN_PLAY;
-      announce('Playing.');
-    }
-  }
+  // Initialize Core Managers & Entities
+  const input = createInputController(canvas);
+  const storage = createStorageManager();
+  const audioSynth = createAudioSynth();
+  const vehicleManager = createVehicleManager(scene, atlas);
+  const helicopter = createPoliceHelicopter(scene);
 
-  function step() {
-    if (screen === SCREEN_TITLE) {
-      world.step(STEP, 0, true);
-      return;
-    }
-    const events = world.step(STEP, input.direction(), false);
-    if (events & EVENT_OVER) endGame();
-    else if (events & EVENT_HIT) announce(world.state.lives === 1 ? 'Hit. 1 life left.' : `Hit. ${world.state.lives} lives left.`);
-  }
+  // Spawn Hero Vehicle (Kestrel GT) & Articulated 3D Player Character (Nico Vance)
+  const heroCar = vehicleManager.spawnVehicle('kestrel_gt', 1.35, 9.8, Math.PI + 0.14);
+  const playerRig = createCharacterRig('player');
+  playerRig.position.set(-75.2, 0, 125.0);
+  playerRig.visible = false;
+  scene.add(playerRig);
 
-  function frame(now) {
-    requestAnimationFrame(frame);
-    accumulator += Math.min((now - last) / 1000, MAX_FRAME);
-    last = now;
-    handleActions();
-    if (screen === SCREEN_TITLE || screen === SCREEN_PLAY) {
-      while (accumulator >= STEP && (screen === SCREEN_TITLE || screen === SCREEN_PLAY)) {
-        step();
-        accumulator -= STEP;
-      }
-    } else {
-      accumulator = 0;
-    }
-    renderer.draw(world.state, screen, best);
-  }
+  // Initialize Open-World Systems
+  const trafficSystem = createTrafficSystem(scene, vehicleManager, rng);
+  const policeSystem = createPoliceSystem(scene, vehicleManager, helicopter);
+  const crewSystem = createCrewSystem(policeSystem, audioSynth);
+  const combatSystem = createCombatSystem(scene, audioSynth);
+  const missionSystem = createMissionSystem();
+  const economySystem = createEconomySystem(storage, audioSynth);
 
-  // Leaving the tab pauses a running game rather than letting blocks fall unseen.
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && screen === SCREEN_PLAY) {
-      screen = SCREEN_PAUSED;
-      announce('Paused.');
-    }
+  let gameMode = 'chase'; // 'chase' | 'onfoot' | 'garage' | 'hub'
+  const isShotCapture = Boolean(shotParam);
+
+  const hud = createHudController();
+  const menus = createMenuController(economySystem, missionSystem, storage, {
+    onSetMode(newMode) {
+      applyDeterministicShotStage(newMode, stageContext);
+    },
+    onPaintSelect(hex) {
+      economySystem.applyPaint(hex, heroCar, policeSystem);
+    },
+    onInstallUpgrade() {
+      economySystem.installSelectedUpgrade(heroCar);
+    },
   });
 
-  announce('Block Dodger. Press Space or click to start.');
-  requestAnimationFrame(frame);
+  const stageContext = {
+    camera,
+    heroCar,
+    playerRig,
+    policeSystem,
+    helicopter,
+    missionSystem,
+    combatSystem,
+    hud,
+    menus,
+    city,
+    setGameMode(m) {
+      gameMode = m;
+    },
+  };
+
+  // Stage initial deterministic scene (defaults to Action-First 4★ Chase Cover)
+  applyDeterministicShotStage(shotParam || 'chase', stageContext);
+
+  function syncHud(elapsedTime) {
+    const activePos = gameMode === 'onfoot' ? playerRig.position : heroCar.position;
+    const activeHeading = gameMode === 'onfoot' ? playerRig.rotation.y : heroCar.rotation.y;
+    const units = policeSystem.getDispatchUnits(activePos);
+
+    hud.renderPoliceDispatch(units, policeSystem.getWantedStars());
+    hud.renderWeapons(combatSystem.weapons, combatSystem.getActiveSlot());
+    hud.renderCrew(crewSystem.getAbilities());
+    hud.renderMinimap(activePos, activeHeading, policeSystem.cruisers, elapsedTime);
+    hud.updateDistrict(activePos);
+    hud.updateVehicleReadout(heroCar, gameMode === 'onfoot', combatSystem.getActiveWeapon());
+    document.getElementById('hud-cash').textContent = `$${economySystem.getCash().toLocaleString()}`;
+  }
+
+  syncHud(1.2);
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  function handleInteractiveHotkeys() {
+    if (input.consumePress('KeyG')) {
+      const next = gameMode === 'garage' ? 'chase' : 'garage';
+      applyDeterministicShotStage(next, stageContext);
+    }
+    if (input.consumePress('KeyM') || input.consumePress('Escape')) {
+      const next = gameMode === 'hub' ? 'chase' : 'hub';
+      applyDeterministicShotStage(next, stageContext);
+    }
+    if (input.consumePress('KeyF') || input.consumePress('KeyE')) {
+      const next = gameMode === 'onfoot' ? 'chase' : 'firefight';
+      applyDeterministicShotStage(next, stageContext);
+    }
+    if (input.consumePress('KeyR')) {
+      hud.cycleRadio();
+    }
+    for (let s = 1; s <= 4; s++) {
+      if (input.consumePress(`Digit${s}`)) {
+        combatSystem.selectWeapon(s);
+      }
+    }
+    if (input.consumePress('KeyZ')) crewSystem.activateAbility('Z', heroCar);
+    if (input.consumePress('KeyX')) crewSystem.activateAbility('X', heroCar);
+    if (input.consumePress('KeyC')) crewSystem.activateAbility('C', heroCar);
+  }
+
+  let lastTime = performance.now();
+  let simTime = 1.25;
+
+  function animate(now) {
+    requestAnimationFrame(animate);
+    const dt = isShotCapture ? 0 : Math.min(0.05, (now - lastTime) / 1000);
+    lastTime = now;
+    simTime += dt;
+
+    handleInteractiveHotkeys();
+
+    if (!isShotCapture) {
+      if (gameMode === 'chase') {
+        const userDriving =
+          input.getThrottle() !== 0 || input.getSteer() !== 0 || input.isHandbrake() || input.isNitro();
+        if (userDriving) {
+          vehicleManager.updateVehiclePhysics(heroCar, input, dt, simTime);
+          const camDist = 9.4;
+          camera.position.set(
+            heroCar.position.x - Math.sin(heroCar.rotation.y) * camDist,
+            3.85,
+            heroCar.position.z - Math.cos(heroCar.rotation.y) * camDist
+          );
+          camera.lookAt(
+            heroCar.position.x + Math.sin(heroCar.rotation.y) * 14,
+            2.1,
+            heroCar.position.z + Math.cos(heroCar.rotation.y) * 14
+          );
+        }
+        policeSystem.update(dt, simTime, heroCar.position, !userDriving);
+        helicopter.update(simTime, heroCar.position, policeSystem.getWantedStars());
+      } else if (gameMode === 'onfoot') {
+        const moveZ = input.getThrottle();
+        const moveX = input.getSteer();
+        if (moveZ !== 0 || moveX !== 0) {
+          playerRig.rotation.y += moveX * 2.6 * dt;
+          const walkStep = moveZ * 6.5 * dt;
+          playerRig.position.x += Math.sin(playerRig.rotation.y) * walkStep;
+          playerRig.position.z += Math.cos(playerRig.rotation.y) * walkStep;
+          playerRig.userData.animateWalk(simTime, 1.4);
+        }
+        const nearCar = vehicleManager.findNearestJackableVehicle(playerRig.position, null, 9.5);
+        if (nearCar) {
+          hud.setContextPrompt(true, `JACK ${nearCar.userData.spec.name}`);
+        } else {
+          hud.setContextPrompt(false);
+        }
+        if (input.mouse.firing) {
+          combatSystem.fireWeapon(playerRig.position);
+        }
+      } else if (gameMode === 'garage') {
+        heroCar.rotation.y += dt * 0.45;
+      }
+
+      trafficSystem.update(dt, simTime, false);
+      crewSystem.update(dt);
+      combatSystem.update(dt, simTime);
+      city.update(dt, simTime);
+      vehicleManager.animateAllVehicles(simTime);
+      lighting.update(simTime, heroCar.position);
+      syncHud(simTime);
+    }
+
+    input.clearFrame();
+    renderer.render(scene, camera);
+    window.__SOLARA_READY = true;
+  }
+
+  // Render initial deterministic frame immediately
+  renderer.render(scene, camera);
+  window.__SOLARA_READY = true;
+  requestAnimationFrame(animate);
 }
 
-if (shot) runShot(shot);
-else runGame();
+bootstrapSolaraBay();
